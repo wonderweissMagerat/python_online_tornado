@@ -5,11 +5,11 @@
 """
 import logging
 import logging.handlers
-
+from cloghandler import ConcurrentRotatingFileHandler
 
 def getLoggers(loggerName , loggerLevel , loggerLocation ):
     """
-    生成logger
+    生成logger，进程非安全
     :param loggerName:logger名字
     :param loggerLevel: logger等级
     :param loggerLocation: logger文件位置
@@ -26,7 +26,20 @@ def getLoggers(loggerName , loggerLevel , loggerLocation ):
     logger.addHandler(handler)
     return logger
 
+def getcLoggers(loggerName,loggerLevel,loggerLocation):
+    '''
+    生成进程安全的logger
+    '''
+    logger = logging.getLogger(loggerName)
+    logger.setLevel(loggerLevel)
+    rotateHandler = ConcurrentRotatingFileHandler(loggerLocation,'a',1073741824,5)
+    logger.addHandler(rotateHandler)
+    
+    return logger
 
+if __name__=='__main__':
+    logger = getcLoggers('test',logging.INFO,'./test.log')
+    logger.info('test')
 '''
 sample:
 

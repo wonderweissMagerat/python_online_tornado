@@ -13,12 +13,20 @@ import tornado.web
 import getopt
 from configparser import ConfigParser
 from logger import getLoggers
+import logging
 import os
 import json
 import requests
 import traceback
 
+import process
 
+#获取明星列表
+star_dict = process.get_star_dict()
+#获取星座列表
+constellation_list = process.get_constellation_list()
+#获取规则列表
+rule_list = process.get_rule()
 
 class MainHandler(tornado.web.RequestHandler):
     """
@@ -32,7 +40,7 @@ class ProcessHandler(tornado.web.RequestHandler):
     计算
     """
     def post(self):
-        response_dict = {'code': -1}
+        response_dict = {'code': -1,'res':0,'cate':'','msg':''}
         docid = 'no_id'
         try:
             data_dict = json.loads(self.request.body)
@@ -40,13 +48,14 @@ class ProcessHandler(tornado.web.RequestHandler):
             docid = data_dict.get('docid')
             title = data_dict.get('title')
             body = data_dict.get('body')
-            
-            logArgs.info('server\t%s\t%s\t%s' % (docid, title, body))
+            category = data_dict.get('category')
+            args_dict = {'docid':docid,'title':title,'category':category}
+            logArgs.info(str(args_dict))
             #process
-            result = process()
+            result = process.process(title,body,category,star_dict,constellation_list,rule_list)
             #result
-            response_dict["code"] = 0
-            response_dict_string = json.dumps(response_dict, ensure_ascii=False)
+            result["code"] = 0
+            response_dict_string = json.dumps(result, ensure_ascii=False)
             logOutput.info('server\t%s\t%s' % (docid, response_dict_string))
             self.finish(response_dict_string)
         except Exception as e:
@@ -58,9 +67,9 @@ class ProcessHandler(tornado.web.RequestHandler):
 
 
 def run():
-    application = tornado.web.Application(
+    app = tornado.web.Application(
         [
-         (r"/api/v0/docsim/sim", ProcessHandler),
+         (r"/api/v0/pandian", ProcessHandler),
          (r"/ndp/online", MainHandler),
          (r"/ndp/offline", MainHandler),
          (r"/ndp/status", MainHandler),
@@ -103,6 +112,7 @@ def read_conf(conf_file):
         logError = getLoggers('logError', logging.INFO, LOG_PATH + '/error.log')
         logDebug = getLoggers('logDebug', logging.INFO, LOG_PATH + '/debug.log')
     except Exception as e:
+        print(str(traceback.format_exc()))
         print('read config file failed')
         return False
     return True
