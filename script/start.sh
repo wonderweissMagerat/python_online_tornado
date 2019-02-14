@@ -6,4 +6,5 @@ date "+%Y-%m-%d %H:%M:%S"
 echo 'starting server'
 
 port=$1
-python server.py -p $port -f config.ini
+PYTHON=/home/$USER/miniconda3/envs/pandian.env/bin/python
+$PYTHON server.py -p $port -f config.ini
