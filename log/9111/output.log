@@ -1,0 +1,11 @@
+2020-04-24 06:38:34,149 - INFO : server	no_id	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:38:53,109 - INFO : server	no_id	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:40:10,630 - INFO : server	no_id	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:40:22,020 - INFO : server	no_id	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:45:33,461 - INFO : server	"123"	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:46:30,905 - INFO : server	"123"	{"code": -1, "label": 0, "score": "0.0", "keywords": []}
+2020-04-24 06:46:46,543 - INFO : server	"123"	{"label": 0, "score": 0.058421146808028665, "keywords": [], "code": 0, "docid": "\"123\""}
+2020-04-24 06:47:09,342 - INFO : server	"123"	{"label": 0, "score": 0.030770266514690194, "keywords": [], "code": 0, "docid": "\"123\""}
+2020-04-24 06:47:32,803 - INFO : server	"123"	{"label": 0, "score": 0.011648775525986501, "keywords": [], "code": 0, "docid": "\"123\""}
+2020-04-24 06:49:19,641 - INFO : server	"123"	{"label": 0, "score": 0.058421146808028665, "keywords": [], "code": 0, "docid": "\"123\""}
+2020-04-24 06:49:46,137 - INFO : server	"123"	{"label": 1, "score": 0.5454800032327286, "keywords": [], "code": 0, "docid": "\"123\""}

@@ -34,9 +34,6 @@ cate_dict = process.get_local_diction('./dict/cate_dict')
 
 print('local file loaded')
 
-print(idf_dict)
-print(embedding['porn'])
-print(forbidden_strict)
 
 
 
@@ -84,13 +81,12 @@ class ProcessHandler(tornado.web.RequestHandler):
         response_dict = {'code': -1,'label':0,'score':'0.0','keywords':[]}
         docid = 'no_id'
         try:
-            data_dict = json.loads(self.request.body)
             ##get parameters
-            docid = data_dict.get('docid')
-            title = data_dict.get('title')
-            content = data_dict.get('content')
-            category = data_dict.get('text_category')
-            url = data_dict.get('url')
+            docid = self.get_argument('docid')
+            title = self.get_argument('title')
+            content = self.get_argument('content')
+            category = eval(self.get_argument('text_category'))
+            url = self.get_argument('url')
             args_dict = {'docid':docid,'title':title,'category':category,'url':url}
             logArgs.info(str(args_dict))
             #process
