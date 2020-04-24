@@ -11,18 +11,17 @@ import requests
 import json
 import time
 
-url_prefix = 'localhost:9003/api/v0'
+url_prefix = 'http://0.0.0.0:9111/api/v0/sensitive'
 
-test_file = 'data'
+test_file = sys.argv[1]
 
 start = time.time()
 
 for lines in open(test_file):
     data = lines.strip().split('\t')
-    docid = data[0]
-    docinfo = {'docid':docid}
-    return_info = requests.port(url_prefix,json = docinfo)
-    return_dict = json.loads(return_info)
+    docinfo = json.loads(data[1])
+    return_info = requests.post(url_prefix,json = docinfo)
+    return_dict = json.loads(return_info.text)
     print(return_dict)
 
 print(time.time()-start)

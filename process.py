@@ -23,7 +23,7 @@ def get_embedding_dict(path,dim):
         for i in em_str:
             cur.append(float(i))
         res[data[0]] = cur
-    return cur
+    return res
 
 def get_local_diction(path):
     res = {}
@@ -47,12 +47,12 @@ def ngram_dict(path):
         res[data[0]] = data[1:]
     return res
 
-def get_word_dict(words):
+def get_word_dict(words,stopwords):
     pat = '(\.|\?|-|:|&|/)'
     res = {}
     for word in words:
         for span in re.split(pat,word):
-            if span != '' and span!= ' ':
+            if span != '' and span!= ' ' and span not in stopwords:
                 try:
                     int(span)
                     continue
@@ -72,8 +72,8 @@ def is_in_ngram(words,dic):
         if word in dic:
             flag = True
             for j in range(len(dic[word])):
-                if j+cur+1 <len(data):
-                    if data[j+cur+1]!=ngram[word][j]:
+                if j+cur+1 <len(words):
+                    if words[j+cur+1]!=dic[word][j]:
                         flag = False
                         break
                 else:
@@ -89,7 +89,7 @@ def is_in_ngram(words,dic):
     return res
 
 
-def preprocess(content,forbidden_strict,forbidden_nostrict):
+def preprocess(content,forbidden_strict,forbidden_nostrict,stopwords):
     '''
     preprocessing content
     return:
@@ -97,8 +97,8 @@ def preprocess(content,forbidden_strict,forbidden_nostrict):
         keywords_dict:{'strict':{}} where value is also a set type
     '''
     words = content.lower().split(' ')
-    word_dict = get_word_dict(words)
-    keywords_dict = {'strict':is_in_ngram(words,forbidden_strict),'nostrict':is_in_gram(words,forbidden_nostrict)}
+    word_dict = get_word_dict(words,stopwords)
+    keywords_dict = {'strict':is_in_ngram(words,forbidden_strict),'nostrict':is_in_ngram(words,forbidden_nostrict)}
     return word_dict,keywords_dict
 
 
@@ -139,7 +139,7 @@ def judge(flag,py):
     else:
         return 0
 
-def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict):
+def process(model,idf_dict,embedding,dim,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict,stopwords):
     '''
     main processing function：
     idf_dict:idf weighting，dict
@@ -153,9 +153,9 @@ def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_st
     forbidden_nostrict: keywords that may have relation with sex,dict
     '''
     #preprocess for is_in keywords,counts
-    content_words,content_keywords = preprocess(content,forbidden_strict,forbidden_nostrict)
-    title_words,title_keywords = preprocess(title,forbidden_strict,forbidden_nostrict)
-    url_words,url_keywords = preprocess(url,forbidden_strict,forbidden_nostrict)
+    content_words,content_keywords = preprocess(content,forbidden_strict,forbidden_nostrict,stopwords)
+    title_words,title_keywords = preprocess(title,forbidden_strict,forbidden_nostrict,stopwords)
+    url_words,url_keywords = preprocess(url,forbidden_strict,forbidden_nostrict,stopwords)
     #feature
     input_x = []
     input_x.extend(get_embedding_feature(content_words,embedding,dim,idf_dict))
@@ -171,6 +171,6 @@ def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_st
 
     label = judge(keywords_flag,py)
     #
-    res = {'label':label,'score':0.0,'keywords':[]}
+    res = {'label':label,'score':py,'keywords':[]}
 
     return res

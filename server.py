@@ -24,11 +24,19 @@ import pickle
 import process
 
 model = pickle.load(open('./model/GBDT.MODEL4','rb'))
+stopwords = process.get_local_diction('./dict/stopword_en.txt')
 idf_dict = process.get_value_dict('./dict/idf.dict')
-embedding = process.get_embedding_dict('./dict/top50w.embedding',300)
+embedding = process.get_embedding_dict('../top50w.embedding',300)
 forbidden_strict = process.ngram_dict('./dict/forbidden_strict')
 forbidden_nostrict = process.ngram_dict('./dict/forbidden_nostrict')
 cate_dict = process.get_local_diction('./dict/cate_dict')
+
+
+print('local file loaded')
+
+print(idf_dict)
+print(embedding['porn'])
+print(forbidden_strict)
 
 
 
@@ -51,16 +59,17 @@ class ProcessHandler(tornado.web.RequestHandler):
             data_dict = json.loads(self.request.body)
             ##get parameters
             docid = data_dict.get('docid')
-            title = data_dict.get('set_title')
-            content = data_dict.get('seg_content')
+            title = data_dict.get('title')
+            content = data_dict.get('content')
             category = data_dict.get('text_category')
             url = data_dict.get('url')
             args_dict = {'docid':docid,'title':title,'category':category,'url':url}
             logArgs.info(str(args_dict))
             #process
-            result = process.process(model,idf_dict,embedding,300,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict)
+            result = process.process(model,idf_dict,embedding,300,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict,stopwords)
             #result
             result["code"] = 0
+            result["docid"] = docid
             response_dict_string = json.dumps(result, ensure_ascii=False)
             logOutput.info('server\t%s\t%s' % (docid, response_dict_string))
             self.finish(response_dict_string)
