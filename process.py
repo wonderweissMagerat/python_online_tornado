@@ -8,7 +8,44 @@
 #########################################################################
 import sys
 import re
+import numpy as np
 
+
+
+def get_embedding_dict(path,dim):
+    res = {}
+    for lines in open(path):
+        data = lines.strip().split(' ',1)
+        em_str = data[1].split(' ')
+        if len(em_str)<dim:
+            continue
+        cur = []
+        for i in em_str:
+            cur.append(float(i))
+        res[data[0]] = cur
+    return cur
+
+def get_local_diction(path):
+    res = {}
+    cur = 0
+    for lines in open(path):
+        res[lines.strip().split('\t')[0]] = cur
+        cur +=1
+    return res
+
+def get_value_dict(path):
+    res = {}
+    for lines in open(path):
+        data = lines.strip().split('\t')
+        res[data[0]] = float(data[1])
+    return res
+    
+def ngram_dict(path):
+    res = {}
+    for lines in open(path):
+        data = lines.strip().split(' ')
+        res[data[0]] = data[1:]
+    return res
 
 def get_word_dict(words):
     pat = '(\.|\?|-|:|&|/)'
@@ -49,7 +86,7 @@ def is_in_ngram(words,dic):
                 cur +=1
         else:
             cur +=1
-    return cur
+    return res
 
 
 def preprocess(content,forbidden_strict,forbidden_nostrict):
@@ -65,6 +102,42 @@ def preprocess(content,forbidden_strict,forbidden_nostrict):
     return word_dict,keywords_dict
 
 
+def get_embedding_feature(words,embedding,dim,idf_dict):
+    res = np.zeros(dim)
+    sum_ = 0.0
+    for word in words:
+        if word in idf_dict and word in embedding:
+            res += words[word]*idf_dict[word]*np.array(embedding[word])
+            sum_ += words[word]*idf_dict[word]
+    if sum_ >0:
+        res = res/sum_
+    return res
+
+def get_category_onehot(category,cate_dict):
+    res = [ 0 for i in range(len(cate_dict))]
+    cate = category.get('first_cat')
+    if cate !=None:
+        first_cat = list(cate.keys())[0]
+        if first_cat in cate_dict:
+            res[cate_dict[first_cat]] = 1
+    return res
+
+def get_keywords_flag(content_keywords,title_keywords):
+    if len(title_keywords['strict'])>0:
+        return 1
+    elif len(title_keywords['nostrict'])>=2 or len(content_keywords['strict'])+len(content_keywords['nostrict'])>=5:
+        return 2
+    elif len(title_keywords['nostrict']) + len(content_keywords['strict'])+len(content_keywords['nostrict'])==0:
+        return 4
+    else:
+        return 3
+
+
+def judge(flag,py):
+    if py>0.5:
+        return 1
+    else:
+        return 0
 
 def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict):
     '''
@@ -83,14 +156,14 @@ def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_st
     content_words,content_keywords = preprocess(content,forbidden_strict,forbidden_nostrict)
     title_words,title_keywords = preprocess(title,forbidden_strict,forbidden_nostrict)
     url_words,url_keywords = preprocess(url,forbidden_strict,forbidden_nostrict)
-    
+    #feature
     input_x = []
-    input_x.extend(get_embedding_feature(content_words,embedding,idf_dict))
-    input_x.extend(get_embedding_feature(title_words,embedding,idf_dict))
-    input_x.extend(get_embedding_feature(url_words,embedding,idf_dict))
+    input_x.extend(get_embedding_feature(content_words,embedding,dim,idf_dict))
+    input_x.extend(get_embedding_feature(title_words,embedding,dim,idf_dict))
+    input_x.extend(get_embedding_feature(url_words,embedding,dim,idf_dict))
     
     input_x.extend(get_category_onehot(category,cate_dict))
-
+    
     keywords_flag = get_keywords_flag(content_keywords,title_keywords)
 
     #predict
@@ -100,4 +173,4 @@ def precess(model,idf_dict,embedding,dim,content,category,title,url,forbidden_st
     #
     res = {'label':label,'score':0.0,'keywords':[]}
 
-
+    return res

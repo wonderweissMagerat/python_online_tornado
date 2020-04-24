@@ -18,8 +18,19 @@ import os
 import json
 import requests
 import traceback
+import sklearn
+import pickle
 
 import process
+
+model = pickle.load(open('./model/GBDT.MODEL4','rb'))
+idf_dict = process.get_value_dict('./dict/idf.dict')
+embedding = process.get_embedding_dict('./dict/top50w.embedding',300)
+forbidden_strict = process.ngram_dict('./dict/forbidden_strict')
+forbidden_nostrict = process.ngram_dict('./dict/forbidden_nostrict')
+cate_dict = process.get_local_diction('./dict/cate_dict')
+
+
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -27,26 +38,27 @@ class MainHandler(tornado.web.RequestHandler):
     测试路由
     """
     def get(self):
-        self.finish('Cangjie - AI - NLP\n')
+        self.finish('NB - NLP - SENSITIVE\n')
 
 class ProcessHandler(tornado.web.RequestHandler):
     """
     计算
     """
     def post(self):
-        response_dict = {'code': -1,'res':0,'cate':'','msg':''}
+        response_dict = {'code': -1,'label':0,'score':'0.0','keywords':[]}
         docid = 'no_id'
         try:
             data_dict = json.loads(self.request.body)
             ##get parameters
             docid = data_dict.get('docid')
-            title = data_dict.get('title')
-            body = data_dict.get('body')
-            category = data_dict.get('category')
-            args_dict = {'docid':docid,'title':title,'category':category}
+            title = data_dict.get('set_title')
+            content = data_dict.get('seg_content')
+            category = data_dict.get('text_category')
+            url = data_dict.get('url')
+            args_dict = {'docid':docid,'title':title,'category':category,'url':url}
             logArgs.info(str(args_dict))
             #process
-            result = process.process(title,body,category,star_dict,constellation_list,rule_list)
+            result = process.process(model,idf_dict,embedding,300,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict)
             #result
             result["code"] = 0
             response_dict_string = json.dumps(result, ensure_ascii=False)
@@ -63,7 +75,7 @@ class ProcessHandler(tornado.web.RequestHandler):
 def run():
     app = tornado.web.Application(
         [
-         (r"/api/v0/pandian", ProcessHandler),
+         (r"/api/v0/sensitive", ProcessHandler),
          (r"/ndp/online", MainHandler),
          (r"/ndp/offline", MainHandler),
          (r"/ndp/status", MainHandler),
