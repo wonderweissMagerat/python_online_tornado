@@ -80,6 +80,33 @@ class ProcessHandler(tornado.web.RequestHandler):
             logOutput.info('server\t%s\t%s' % (docid, response_dict_string))
             self.finish(response_dict_string)
 
+    def get(self):
+        response_dict = {'code': -1,'label':0,'score':'0.0','keywords':[]}
+        docid = 'no_id'
+        try:
+            data_dict = json.loads(self.request.body)
+            ##get parameters
+            docid = data_dict.get('docid')
+            title = data_dict.get('title')
+            content = data_dict.get('content')
+            category = data_dict.get('text_category')
+            url = data_dict.get('url')
+            args_dict = {'docid':docid,'title':title,'category':category,'url':url}
+            logArgs.info(str(args_dict))
+            #process
+            result = process.process(model,idf_dict,embedding,300,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict,stopwords)
+            #result
+            result["code"] = 0
+            result["docid"] = docid
+            response_dict_string = json.dumps(result, ensure_ascii=False)
+            logOutput.info('server\t%s\t%s' % (docid, response_dict_string))
+            self.finish(response_dict_string)
+        except Exception as e:
+            msg = str(traceback.format_exc())
+            response_dict_string = json.dumps(response_dict, ensure_ascii=False)
+            logError.error('server\t%s\t%s' % (docid, str(msg)))
+            logOutput.info('server\t%s\t%s' % (docid, response_dict_string))
+            self.finish(response_dict_string)
 
 def run():
     app = tornado.web.Application(
