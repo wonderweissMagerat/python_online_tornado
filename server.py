@@ -21,12 +21,6 @@ import traceback
 
 import process
 
-#获取明星列表
-star_dict = process.get_star_dict()
-#获取星座列表
-constellation_list = process.get_constellation_list()
-#获取规则列表
-rule_list = process.get_rule()
 
 class MainHandler(tornado.web.RequestHandler):
     """
