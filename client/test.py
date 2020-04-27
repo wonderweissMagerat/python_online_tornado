@@ -22,6 +22,6 @@ for lines in open(test_file):
     docinfo = json.loads(data[1])
     return_info = requests.post(url_prefix,json = docinfo)
     return_dict = json.loads(return_info.text)
-    print(return_dict)
+    print(str(return_dict['label'])+'\t'+json.dumps(return_dict))
 
 print(time.time()-start)

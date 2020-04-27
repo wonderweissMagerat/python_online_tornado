@@ -65,7 +65,7 @@ def get_word_dict(words,stopwords):
     return res
 
 def is_in_ngram(words,dic):
-    res = set()
+    res = {}
     cur = 0
     while cur < len(words):
         word = words[cur]
@@ -80,7 +80,7 @@ def is_in_ngram(words,dic):
                     flag = False
                     break
             if flag:
-                res.add((word+' '+' '.join(dic[word])).strip())
+                res[(word+' '+' '.join(dic[word])).strip()] = 1
                 cur = cur+1+len(dic[word])
             else:
                 cur +=1
@@ -115,12 +115,16 @@ def get_embedding_feature(words,embedding,dim,idf_dict):
 
 def get_category_onehot(category,cate_dict):
     res = [ 0 for i in range(len(cate_dict))]
+    if category ==None:
+        return res,False
     cate = category.get('first_cat')
+    if 'Crime' in cate or 'Politics' in cate:
+        return res,True
     if cate !=None:
         first_cat = list(cate.keys())[0]
         if first_cat in cate_dict:
             res[cate_dict[first_cat]] = 1
-    return res
+    return res,False
 
 def get_keywords_flag(content_keywords,title_keywords):
     if len(title_keywords['strict'])>0:
@@ -133,11 +137,20 @@ def get_keywords_flag(content_keywords,title_keywords):
         return 3
 
 
-def judge(flag,py):
-    if py>0.5:
-        return 1
-    else:
-        return 0
+def judge(content_keywords,title_keywords,py):
+    t_s = len(title_keywords['strict'])
+    t_n = len(title_keywords['nostrict'])
+    c_s = len(content_keywords['strict'])
+    c_n = len(content_keywords['nostrict'])
+
+
+    if py>0.5 and t_s+t_n+c_s+c_n >0:
+        if py>0.9:
+            return 1
+        elif t_s+t_n+c_s+c_n >1:
+            return 1
+    return 0
+
 
 def process(model,idf_dict,embedding,dim,content,category,title,url,forbidden_strict,forbidden_nostrict,cate_dict,stopwords):
     '''
@@ -161,16 +174,18 @@ def process(model,idf_dict,embedding,dim,content,category,title,url,forbidden_st
     input_x.extend(get_embedding_feature(content_words,embedding,dim,idf_dict))
     input_x.extend(get_embedding_feature(title_words,embedding,dim,idf_dict))
     input_x.extend(get_embedding_feature(url_words,embedding,dim,idf_dict))
+    cate_fea,flag = get_category_onehot(category,cate_dict)
+    input_x.extend(cate_fea)
     
-    input_x.extend(get_category_onehot(category,cate_dict))
-    
-    keywords_flag = get_keywords_flag(content_keywords,title_keywords)
+    #keywords_flag = get_keywords_flag(content_keywords,title_keywords)
 
     #predict
     py = model.predict_proba([input_x])[0][1]
 
-    label = judge(keywords_flag,py)
-    #
-    res = {'label':label,'score':py,'keywords':[]}
+    label = judge(content_keywords,title_keywords,py)
+    #犯罪类，政府类排除
+    if flag:
+        label = 0
+    res = {'label':label,'score':py,'keywords':{'content_keywords':content_keywords,'title_keywords':title_keywords}}
 
     return res

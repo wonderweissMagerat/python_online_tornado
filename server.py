@@ -56,10 +56,20 @@ class ProcessHandler(tornado.web.RequestHandler):
             data_dict = json.loads(self.request.body)
             ##get parameters
             docid = data_dict.get('docid')
-            title = data_dict.get('title')
-            content = data_dict.get('content')
+            if docid ==None:
+                docid = 'no_id'
+            title = data_dict.get('seg_title')
+            if title == None:
+                title = ''
+            content = data_dict.get('seg_content')
+            if content == None:
+                content = ''
             category = data_dict.get('text_category')
+            if category == None:
+                category = {}
             url = data_dict.get('url')
+            if url == None:
+                url = ''
             args_dict = {'docid':docid,'title':title,'category':category,'url':url}
             logArgs.info(str(args_dict))
             #process
@@ -83,8 +93,8 @@ class ProcessHandler(tornado.web.RequestHandler):
         try:
             ##get parameters
             docid = self.get_argument('docid')
-            title = self.get_argument('title')
-            content = self.get_argument('content')
+            title = self.get_argument('seg_title')
+            content = self.get_argument('seg_content')
             category = eval(self.get_argument('text_category'))
             url = self.get_argument('url')
             args_dict = {'docid':docid,'title':title,'category':category,'url':url}
